@@ -65,9 +65,10 @@ else:
     filtered_df = df
 
 # Show content based on the selection
-if selection == "1. Explanation of Indicators":
-    st.header("Explanation of Indicators")
-    st.write("""
+match selection:
+    case '1. Explanation of Indicators':
+        st.header("Explanation of Indicators")
+        st.write("""
     **Key Performance Indicators (KPIs):**
     - **Total Sales:** Sum of all sales revenue.
     - **Gross Profit:** Total sales minus cost of goods sold.
@@ -76,129 +77,132 @@ if selection == "1. Explanation of Indicators":
     - **Days Inventory Outstanding (DIO):** Average number of days inventory is held before sale.
     """)
     
-    # Display the validation results for the default data
-    st.write("Validation Results for Default Data:")
-    st.write(validation_results)
-
-elif selection == "2. Enter Data":
-    st.header("Enter Data")
-    st.write("Upload a new sales data CSV file.")
-    uploaded_file = st.file_uploader("Choose a file", type="csv")
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file, parse_dates=['InvoiceDate'])
-        
-        # Validate the uploaded data
-        validation_results = validate_data(df)
-        st.write("Validation Results for Uploaded Data:")
+        # Display the validation results for the default data
+        st.write("Validation Results for Default Data:")
         st.write(validation_results)
-        
-        # Handle missing values and clean the data
-        df = handle_missing_values(df)
-        df = clean_data(df)
-        df = format_data(df)
 
-        st.success("Data uploaded and processed successfully.")
+    case '2. Enter Data':
+        st.header("Enter Data")
+        st.write("Upload a new sales data CSV file.")
+        uploaded_file = st.file_uploader("Choose a file", type="csv")
+        if uploaded_file:
+            df = pd.read_csv(uploaded_file, parse_dates=['InvoiceDate'])
+        
+            # Validate the uploaded data
+            validation_results = validate_data(df)
+            st.write("Validation Results for Uploaded Data:")
+            st.write(validation_results)
+            
+            # Handle missing values and clean the data
+            df = handle_missing_values(df)
+            df = clean_data(df)
+            df = format_data(df)
+
+            st.success("Data uploaded and processed successfully.")
 
 # Monthly Dashboard (Selection 3)
-elif selection == "3. Monthly Dashboard":
-    st.header("Monthly Dashboard")
+    case "3. Monthly Dashboard":
+        st.header("Monthly Dashboard")
 
-    # Get the monthly metrics
-    monthly_metrics = get_monthly_metrics(filtered_df)
-    order_metrics = calculate_order_metrics(filtered_df, period='monthly')
-    last_month = datetime.now() - timedelta(days=30)
-    
-    # Format month for 'vs last month' string
-    last_month_str = str(last_month)
-    last_month_date = datetime.strptime(last_month_str.split()[0], '%Y-%m-%d')
-    formatted_date = last_month_date.strftime('%b %y')
+        # Get the monthly metrics
+        monthly_metrics = get_monthly_metrics(filtered_df)
+        order_metrics = calculate_order_metrics(filtered_df, period='monthly')
+        last_month = datetime.now() - timedelta(days=30)
+        
+        # Format month for 'vs last month' string
+        last_month_str = str(last_month)
+        last_month_date = datetime.strptime(last_month_str.split()[0], '%Y-%m-%d')
+        formatted_date = last_month_date.strftime('%b %y')
 
-    # Display metrics in a 3x2 grid
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Monthly Sales 💰", f"${monthly_metrics['current_sales']:,.2f}", f"{monthly_metrics['sales_change']:.1f}% vs {formatted_date}")
-    with col2:
-        st.metric("Monthly Profit 📈", f"${monthly_metrics['current_profit']:,.2f}", f"{monthly_metrics['profit_change']:.1f}% vs {formatted_date}")
-    with col3:
-        st.metric("Monthly # of Orders 🛒", f"{order_metrics['current_orders']:,}", f"{order_metrics['order_change']:.1f}% vs {formatted_date}")
-    
-    col4, col5, col6 = st.columns(3)
-    with col4:
-        st.metric("Monthly DSO 📅", f"{monthly_metrics['current_dso']:.2f} days", f"{monthly_metrics['dso_change']:.1f}% vs {formatted_date}")
-    with col5:
-        st.metric("Monthly DPO 🏦", f"{monthly_metrics['current_dpo']:.2f} days", f"{monthly_metrics['dpo_change']:.1f}% vs {formatted_date}")
-    with col6:
-        st.metric("Monthly DIO 📦", f"{monthly_metrics['current_dio']:.2f} days", f"{monthly_metrics['dio_change']:.1f}% vs {formatted_date}")
-
-    # Filter data for the past month
-    monthly_filtered_df = filtered_df[filtered_df['InvoiceDate'] >= last_month]
-
-    # Check if there is data for the past month
-    if not monthly_filtered_df.empty:
-        # Visualizations in a 3x2 grid using the filtered data
+        # Display metrics in a 3x2 grid
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.plotly_chart(create_sales_by_product_chart(monthly_filtered_df), use_container_width=True)
-            st.plotly_chart(create_sales_by_region_chart(monthly_filtered_df), use_container_width=True)
+            st.metric("Monthly Sales 💰", f"${monthly_metrics['current_sales']:,.2f}", f"{monthly_metrics['sales_change']:.1f}% vs {formatted_date}")
         with col2:
-            st.plotly_chart(create_monthly_sales_trend_chart(monthly_filtered_df), use_container_width=True)
-            st.plotly_chart(create_sales_vs_target_chart(monthly_filtered_df), use_container_width=True)
+            st.metric("Monthly Profit 📈", f"${monthly_metrics['current_profit']:,.2f}", f"{monthly_metrics['profit_change']:.1f}% vs {formatted_date}")
         with col3:
-            st.plotly_chart(create_sales_by_channel_pie_chart(monthly_filtered_df), use_container_width=True)
-            # Add another visualization here if needed
-    else:
-        st.warning("No data available for the past month.")
+            st.metric("Monthly # of Orders 🛒", f"{order_metrics['current_orders']:,}", f"{order_metrics['order_change']:.1f}% vs {formatted_date}")
+        
+        col4, col5, col6 = st.columns(3)
+        with col4:
+            st.metric("Monthly DSO 📅", f"{monthly_metrics['current_dso']:.2f} days", f"{monthly_metrics['dso_change']:.1f}% vs {formatted_date}")
+        with col5:
+            st.metric("Monthly DPO 🏦", f"{monthly_metrics['current_dpo']:.2f} days", f"{monthly_metrics['dpo_change']:.1f}% vs {formatted_date}")
+        with col6:
+            st.metric("Monthly DIO 📦", f"{monthly_metrics['current_dio']:.2f} days", f"{monthly_metrics['dio_change']:.1f}% vs {formatted_date}")
+
+        # Filter data for the past month
+        monthly_filtered_df = filtered_df[filtered_df['InvoiceDate'] >= last_month]
+
+        # Check if there is data for the past month
+        if not monthly_filtered_df.empty:
+            # Visualizations in a 3x2 grid using the filtered data
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.plotly_chart(create_sales_by_product_chart(monthly_filtered_df), use_container_width=True)
+                st.plotly_chart(create_sales_by_region_chart(monthly_filtered_df), use_container_width=True)
+            with col2:
+                st.plotly_chart(create_monthly_sales_trend_chart(monthly_filtered_df), use_container_width=True)
+                st.plotly_chart(create_sales_vs_target_chart(monthly_filtered_df), use_container_width=True)
+            with col3:
+                st.plotly_chart(create_sales_by_channel_pie_chart(monthly_filtered_df), use_container_width=True)
+                # Add another visualization here if needed
+        else:
+            st.warning("No data available for the past month.")
 
 # YTD Dashboard (Selection 4)
-elif selection == "4. YTD Dashboard":
-    st.header("Year-to-Date (YTD) Dashboard")
+    case "4. YTD Dashboard":
+        st.header("Year-to-Date (YTD) Dashboard")
 
-    # Get the YTD metrics
-    ytd_metrics = get_ytd_metrics(filtered_df)
-    ytd_order_metrics = calculate_order_metrics(filtered_df, period='ytd')
-    last_year = datetime.now() - timedelta(days=365)
+        # Get the YTD metrics
+        ytd_metrics = get_ytd_metrics(filtered_df)
+        ytd_order_metrics = calculate_order_metrics(filtered_df, period='ytd')
+        last_year = datetime.now() - timedelta(days=365)
 
-    # Format YTD for 'vs YTD' str
-    last_year_str = str(last_year)
-    last_year_date = datetime.strptime(last_year_str.split()[0], '%Y-%m-%d')
-    formatted_year_date = last_year_date.strftime('%b %y')
+        # Format YTD for 'vs YTD' str
+        last_year_str = str(last_year)
+        last_year_date = datetime.strptime(last_year_str.split()[0], '%Y-%m-%d')
+        formatted_year_date = last_year_date.strftime('%b %y')
 
-    # Display metrics in a 3x2 grid
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Year to Date Sales 💰", f"${ytd_metrics['current_sales']:,.2f}", f"{ytd_metrics['sales_change']:.1f}% vs {formatted_year_date}")
-    with col2:
-        st.metric("Year to Date Profit 📈", f"${ytd_metrics['current_profit']:,.2f}", f"{ytd_metrics['profit_change']:.1f}% vs {formatted_year_date}")
-    with col3:
-        st.metric("Year to Date # of Orders 🛒", f"{ytd_order_metrics['current_orders']:,}", f"{ytd_order_metrics['order_change']:.1f}% vs {formatted_year_date}")
-    
-    col4, col5, col6 = st.columns(3)
-    with col4:
-        st.metric("Year to Date DSO 📅", f"{ytd_metrics['current_dso']:.2f} days", f"{ytd_metrics['dso_change']:.1f}% vs {formatted_year_date}")
-    with col5:
-        st.metric("Year to Date DPO 🏦", f"{ytd_metrics['current_dpo']:.2f} days", f"{ytd_metrics['dpo_change']:.1f}% vs {formatted_year_date}")
-    with col6:
-        st.metric("Year to Date DIO 📦", f"{ytd_metrics['current_dio']:.2f} days", f"{ytd_metrics['dio_change']:.1f}% vs {formatted_year_date}")
-    
-    # Filter data for the last year
-    ytd_filtered_df = filtered_df[filtered_df['InvoiceDate'] >= last_year]
-
-    # Check if there is data for the last year
-    if not ytd_filtered_df.empty:
-        # Visualizations in a 3x2 grid
+        # Display metrics in a 3x2 grid
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.plotly_chart(create_sales_by_product_chart(ytd_filtered_df), use_container_width=True)
-            st.plotly_chart(create_sales_by_region_chart(ytd_filtered_df), use_container_width=True)
+            st.metric("Year to Date Sales 💰", f"${ytd_metrics['current_sales']:,.2f}", f"{ytd_metrics['sales_change']:.1f}% vs {formatted_year_date}")
         with col2:
-            st.plotly_chart(create_monthly_sales_trend_chart(ytd_filtered_df), use_container_width=True)
-            st.plotly_chart(create_sales_vs_target_chart(ytd_filtered_df), use_container_width=True)
+            st.metric("Year to Date Profit 📈", f"${ytd_metrics['current_profit']:,.2f}", f"{ytd_metrics['profit_change']:.1f}% vs {formatted_year_date}")
         with col3:
-            st.plotly_chart(create_sales_by_channel_pie_chart(ytd_filtered_df), use_container_width=True)
-            # Add another visualization here if needed
-    else:
-        st.warning("No data available for the last year.")
+            st.metric("Year to Date # of Orders 🛒", f"{ytd_order_metrics['current_orders']:,}", f"{ytd_order_metrics['order_change']:.1f}% vs {formatted_year_date}")
+        
+        col4, col5, col6 = st.columns(3)
+        with col4:
+            st.metric("Year to Date DSO 📅", f"{ytd_metrics['current_dso']:.2f} days", f"{ytd_metrics['dso_change']:.1f}% vs {formatted_year_date}")
+        with col5:
+            st.metric("Year to Date DPO 🏦", f"{ytd_metrics['current_dpo']:.2f} days", f"{ytd_metrics['dpo_change']:.1f}% vs {formatted_year_date}")
+        with col6:
+            st.metric("Year to Date DIO 📦", f"{ytd_metrics['current_dio']:.2f} days", f"{ytd_metrics['dio_change']:.1f}% vs {formatted_year_date}")
+        
+        # Filter data for the last year
+        ytd_filtered_df = filtered_df[filtered_df['InvoiceDate'] >= last_year]
 
+        # Check if there is data for the last year
+        if not ytd_filtered_df.empty:
+            # Visualizations in a 3x2 grid
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.plotly_chart(create_sales_by_product_chart(ytd_filtered_df), use_container_width=True)
+                st.plotly_chart(create_sales_by_region_chart(ytd_filtered_df), use_container_width=True)
+            with col2:
+                st.plotly_chart(create_monthly_sales_trend_chart(ytd_filtered_df), use_container_width=True)
+                st.plotly_chart(create_sales_vs_target_chart(ytd_filtered_df), use_container_width=True)
+            with col3:
+                st.plotly_chart(create_sales_by_channel_pie_chart(ytd_filtered_df), use_container_width=True)
+                # Add another visualization here if needed
+        else:
+            st.warning("No data available for the last year.")
+
+    case _: 
+        st.warning("Invalid selection, exiting the app.")
+        st.stop()
 
 # Footer
 footer = """
